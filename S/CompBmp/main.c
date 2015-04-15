@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     time(&rawtime);
     timeinfo = localtime(&rawtime);
 
-    sprintf(testTime,"_%2d_%2d_%2d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    sprintf(testTime,"_%02d-%02d-%02d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 
     strncpy(testFullName, argv[3], strrchr(argv[3], '\\') - argv[3] + 1);
     strncat(testFullName, strrchr(argv[4],'\\')+1, strlen(strrchr(argv[4],'\\'))-5);
