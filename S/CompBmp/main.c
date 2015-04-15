@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <time.h>
 
 enum outputFlag {   filesIdentical = 0,
                     filesDifferent,
@@ -9,10 +10,8 @@ enum outputFlag {   filesIdentical = 0,
 
 int main(int argc, char *argv[])
 {
-    char bitToTest = 0, toTestBuffer = 0;
-    char fileSizeBuffer[5];
-
     int  i, maskEnabled = 1;
+    char testTime[10]={'\0'};
     uint32_t refScreenSize = 0, testScreenSize = 0, maskSize = 0, cnt = 0, start = 0x3E;
 
     FILE * refScreen = NULL;
@@ -20,12 +19,25 @@ int main(int argc, char *argv[])
     FILE * mask = NULL;
     FILE * output = NULL;
 
+    char bitToTest = 0, toTestBuffer = 0;
+    char fileSizeBuffer[5];
+    char testFullName[512]={0};
+
     char * testName = argv[1];
     char * testNbr = argv[2];
 
-    char testFullName[255];
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    sprintf(testTime,"_%2d_%2d_%2d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+
     strncpy(testFullName, argv[3], strrchr(argv[3], '\\') - argv[3] + 1);
-    strcat(testFullName, strrchr(argv[4],'\\')+1);
+    strncat(testFullName, strrchr(argv[4],'\\')+1, strlen(strrchr(argv[4],'\\'))-5);
+    strcat(testFullName, testTime);
+    strcat(testFullName, ".bmp");
 
     refScreen = fopen(argv[4],"r");
     testScreen = fopen(argv[3],"r");
@@ -70,7 +82,7 @@ int main(int argc, char *argv[])
              || ((testScreenSize != refScreenSize)
                  || ((testScreenSize != maskSize) && !maskEnabled)))
                  {
-                    fprintf(output, "%s;%s;ERR\n", testName, testNbr);
+                    fprintf(output, "%s;%s;ERRSIZE;%s\n", testName, testNbr, testTime+1);
                     fclose(refScreen);
                     fclose(testScreen);
                     fclose(output);
@@ -95,7 +107,7 @@ int main(int argc, char *argv[])
 
             if (!bitToTest)
             {
-                fprintf(output, "%s;%s;NOK\n", testName, testNbr);
+                fprintf(output, "%s;%s;NOK;%s\n", testName, testNbr, testTime+1);
 
                 fclose(refScreen);
                 fclose(testScreen);
@@ -113,9 +125,11 @@ int main(int argc, char *argv[])
     }
     else
     {
-        fprintf(output, "%s;%s;ERR\n", testName, testNbr);
+        fprintf(output, "%s;%s;ERROP;%s\n", testName, testNbr, testTime+1);
         if (rename(argv[3], testFullName))
+        {
             return errorOpeningFile;
+        }
         fclose(refScreen);
         fclose(testScreen);
         fclose(output);
@@ -125,7 +139,7 @@ int main(int argc, char *argv[])
         return errorOpeningFile;
     }
 
-    fprintf(output, "%s;%s;OK\n", testName, testNbr);
+    fprintf(output, "%s;%s;OK;%s\n", testName, testNbr, testTime+1);
 
     fclose(refScreen);
     fclose(testScreen);
