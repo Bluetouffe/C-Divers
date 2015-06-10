@@ -59,7 +59,7 @@ void displayArray ( uint64_t size, uint8_t * t_array )
     printf("\n");
 }
 
-uint8_t * preprocessing ( char * message , uint64_t * size )
+void preprocessing ( char * message , uint64_t * size , uint8_t * out )
 {
     uint16_t zerosToAdd = 0;
     uint16_t i = 0;
@@ -67,38 +67,34 @@ uint8_t * preprocessing ( char * message , uint64_t * size )
     uint64_t messageLength = strlen( message );
     uint64_t bitInTreatment = messageLength;
 
-    uint8_t * test = ( uint8_t * ) malloc( messageLength * sizeof( uint8_t ) );
-    charArrayToInt( message , test );
+    charArrayToInt( message , out );
 
-    test = ( uint8_t * ) realloc( test , ( bitInTreatment + 1 ) * sizeof( uint8_t ) );
+    out = ( uint8_t * ) realloc( out , ( bitInTreatment + 1 ) * sizeof( uint8_t ) );
     //Add 1 at the string's end
-    test[ bitInTreatment++ ] = 0x80; // =0b10000000
+    out[ bitInTreatment++ ] = 0x80; // =0b10000000
 
     zerosToAdd = ( ( 448 - ( bitInTreatment * 8 ) ) % 512 ) / 8;
 
-    test = ( uint8_t * ) realloc( test , ( bitInTreatment + zerosToAdd ) * sizeof( uint8_t ) );
+    out = ( uint8_t * ) realloc( out , ( bitInTreatment + zerosToAdd ) * sizeof( uint8_t ) );
 
     for ( i = 0 ; i < zerosToAdd ; i++ )
     {
-        test[ bitInTreatment + i ] = 0;
+        out[ bitInTreatment + i ] = 0;
     }
     bitInTreatment += i;
 
     for ( i = 0 ; i < 8 ; i++ )
     {
-        test[ bitInTreatment + i ] = messageLength << (8*(7-i));
+        out[ bitInTreatment + i ] = messageLength << (8*(7-i));
     }
 
     bitInTreatment += i;
     *size = bitInTreatment;
-    return test;
 }
 
-uint32_t ** divideInBlocks (uint8_t * message , uint64_t size )
+void divideInBlocks (uint8_t * message , uint64_t size , uint32_t ** messageDivided)
 {
-    uint64_t numberOfBlocks = size >> 6;//Divide by 64
-    uint32_t ** messageDivided = NULL;
-    messageDivided = (uint32_t**) calloc( numberOfBlocks, sizeof(uint8_t*) );
+    uint64_t numberOfBlocks = size >> 6;
 
     printf("\nDivide\n");
     displayArray(size, message);
@@ -123,16 +119,21 @@ uint32_t ** divideInBlocks (uint8_t * message , uint64_t size )
             }
         }
     }
-
-    return messageDivided;
 }
 
 void hashSHA1 ( char * message )
 {
-    uint64_t size;
-    uint8_t * test = preprocessing( message , &size );
+    uint64_t size = strlen ( message );
+    uint8_t * test = ( uint8_t * ) calloc(  size , sizeof( uint8_t ) );;
+
+    preprocessing( message , &size , test );
     displayArray(size, test);
-    uint32_t ** divided = divideInBlocks( test , size );
+
+//    uint64_t numberOfBlocks = size >> 6;//Divide by 64
+//    uint32_t ** divided = NULL;
+//    divided = (uint32_t**) calloc( numberOfBlocks, sizeof(uint8_t*) );
+//
+//    divideInBlocks( test , size , divided );
 
 //    uint32_t h0 = 0x67452301;
 //    uint32_t h1 = 0xEFCDAB89;
@@ -140,7 +141,7 @@ void hashSHA1 ( char * message )
 //    uint32_t h3 = 0x10325476;
 //    uint32_t h4 = 0xC3D2E1F0;
     free( test );
-    free( divided );
+    //free( divided );
 }
 
 int main()
