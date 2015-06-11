@@ -113,7 +113,7 @@ void divideInBlocks (uint8_t * message , uint64_t size , uint32_t ** messageDivi
             for ( k = 0 ; k < 4 ; k++ )
             {
                 ind = ( j * 4 ) + k;
-                printf("%d ", message[ind]);
+//                printf("%d ", message[ind]);
 //                dec = 8 * ( 3 - k );
 //                messageDivided[i][j] &=  ( ( (uint32_t) message[ind] ) << dec );
             }
@@ -126,14 +126,14 @@ void hashSHA1 ( char * message )
     uint64_t size = strlen ( message );
     uint8_t * test = ( uint8_t * ) calloc(  size , sizeof( uint8_t ) );;
 
+    printf("\nPreprocessing :\n");
     preprocessing( message , &size , test );
     displayArray(size, test);
 
-//    uint64_t numberOfBlocks = size >> 6;//Divide by 64
-//    uint32_t ** divided = NULL;
-//    divided = (uint32_t**) calloc( numberOfBlocks, sizeof(uint8_t*) );
+    uint64_t numberOfBlocks = size >> 6;//Divide by 64
+    uint32_t ** divided = (uint32_t**) calloc( numberOfBlocks, sizeof(uint8_t*) );
 //
-//    divideInBlocks( test , size , divided );
+    divideInBlocks( test , size , divided );
 
 //    uint32_t h0 = 0x67452301;
 //    uint32_t h1 = 0xEFCDAB89;
