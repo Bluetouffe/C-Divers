@@ -65,31 +65,32 @@ void preprocessing ( char * message , uint64_t * size , uint8_t * out )
     uint16_t i = 0;
 
     uint64_t messageLength = strlen( message );
-    uint64_t bitInTreatment = messageLength;
+
+    uint64_t byteInTreatment = messageLength;
 
     charArrayToInt( message , out );
 
-    out = ( uint8_t * ) realloc( out , ( bitInTreatment + 1 ) * sizeof( uint8_t ) );
+    out = ( uint8_t * ) realloc( out , ( byteInTreatment + 1 ) * sizeof( uint8_t ) );
     //Add 1 at the string's end
-    out[ bitInTreatment++ ] = 0x80; // =0b10000000
+    out[ byteInTreatment++ ] = 0x80; // =0b10000000
 
-    zerosToAdd = ( ( 448 - ( bitInTreatment * 8 ) ) % 512 ) / 8;
+    zerosToAdd = ( ( 448 - ( messageLength * 8 ) ) % 512 ) / 8;
 
-    out = ( uint8_t * ) realloc( out , ( bitInTreatment + zerosToAdd ) * sizeof( uint8_t ) );
+    out = ( uint8_t * ) realloc( out , ( byteInTreatment + zerosToAdd - 1 ) * sizeof( uint8_t ) );
 
     for ( i = 0 ; i < zerosToAdd ; i++ )
     {
-        out[ bitInTreatment + i ] = 0;
+        out[ byteInTreatment ] = 0;
+        byteInTreatment++;
     }
-    bitInTreatment += i;
-
+    displayArray(byteInTreatment, out);
     for ( i = 0 ; i < 8 ; i++ )
     {
-        out[ bitInTreatment + i ] = messageLength << (8*(7-i));
+        out[ byteInTreatment ] = messageLength << ( 8 * ( 7 - i ) );
+        byteInTreatment++;
     }
 
-    bitInTreatment += i;
-    *size = bitInTreatment;
+    *size = byteInTreatment;
 }
 
 void divideInBlocks (uint8_t * message , uint64_t size , uint32_t ** messageDivided)
