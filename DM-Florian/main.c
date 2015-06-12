@@ -117,7 +117,11 @@ void hashSHA1 ( char * message )
 	}
 
     test = preprocessing( message , &size);
+    ///////////////////////
+    displayArray(size, test);
+    ///////////////////////
 
+    printf("After divide : \n");
     for ( i = 0 ; i < numberOfBlocks ; i++ )
     {
         for ( j = 0 ; j < 16 ; j++ )
@@ -129,16 +133,16 @@ void hashSHA1 ( char * message )
                 dec = 8 * ( 3 - k );
                 divided[i][j] |=  (uint32_t) test[ind] << dec;
             }
+            printf("%08X ", divided[i][j]);
         }
     }
+    printf("\n");
 
     uint32_t h0 = H0;
     uint32_t h1 = H1;
     uint32_t h2 = H2;
     uint32_t h3 = H3;
     uint32_t h4 = H4;
-
-    //displayArray(size, test);
 
     for ( i = 0 ; i < numberOfBlocks ; i++ )
     {
@@ -148,6 +152,7 @@ void hashSHA1 ( char * message )
             if ( j < 16 )
             {
                 W[j] = divided[i][j];
+                printf("%08X ", divided[i][j]);
             }
             else
             {
@@ -165,29 +170,25 @@ void hashSHA1 ( char * message )
 
         for ( j = 0 ; j < 80 ; j++ )
         {
-            if ( j <= 19 )
+            if ( j < 20 )
             {
-                f = ( ( b & c ) | ( (~b) & d ) );
+                f = (d ^ (b & (c ^ d)));
                 kt = K1;
-                kt = 0x5A827999;
             }
-            if ( ( j >= 20 ) && ( j <= 39 ) )
+            else if ( j < 40 )
             {
-                f = ( ( b ^ c ) ^ d );
+                f = b ^ c  ^ d;
                 kt = K2;
-                kt = 0x6ED9EBA1;
             }
-            if ( ( j >= 40 ) && ( j <= 59 ) )
+            else if ( j < 60 )
             {
-                f = ( ( b & c ) | ( b & d ) ) | ( c & d );
+                f = ((b & c) | (d & (b | c)));
                 kt = K3;
-                kt = 0x8F1BBCDC;
             }
-            if ( ( j >= 60 ) && ( j <= 79 ) )
+            else
             {
-                f = b ^ ( c ^ d );
+                f = b ^ c ^ d;
                 kt = K4;
-                kt = 0xCA62C1D6;
             }
 
             bufferROTL = ( a << 5 ) | ( a >> (32 - 5) );
@@ -201,22 +202,27 @@ void hashSHA1 ( char * message )
             b = a;
             a = bufferCondensate;
         }
+
         h0 += a;
         h1 += b;
         h2 += c;
         h3 += d;
         h4 += e;
+        printf("\nResulting hash is : %08X %08X %08X %08X %08X\n", h0 , h1 , h2 , h3 , h4 );
     }
-    printf("Resulting hash is :%X %X %X %X %X\n", h0 , h1 , h2 , h3 , h4 );
 
+
+o
     free(test);
     free(divided);
 }
 
 int main()
 {
-    char * message = "";
-//    char * message = "The quick brown fox jumps over the lazy dog";
+//    char * message = "";
+    char * message = "The quick brown fox jumps over the lazy dog";
+//    char * message  = "test";
+    printf("Size message : %d\n\n", strlen(message));
 //    char * message = "The quick brown fox jumps over the lazy cog";
 //    char * message = "abcdefghijklmnopqrstuvwxyz";
     hashSHA1( message );
