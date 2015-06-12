@@ -59,7 +59,7 @@ void displayArray ( uint64_t size, uint8_t * t_array )
     printf("\n");
 }
 
-void preprocessing ( char * message , uint64_t * size , uint8_t * out )
+uint8_t * preprocessing ( char * message , uint64_t * size , uint8_t * out )
 {
     uint16_t zerosToAdd = 0;
     uint16_t i = 0;
@@ -72,18 +72,20 @@ void preprocessing ( char * message , uint64_t * size , uint8_t * out )
 
     out = ( uint8_t * ) realloc( out , ( byteInTreatment + 1 ) * sizeof( uint8_t ) );
     //Add 1 at the string's end
-    out[ byteInTreatment++ ] = 0x80; // =0b10000000
 
-    zerosToAdd = ( ( 448 - ( messageLength * 8 ) ) % 512 ) / 8;
+    out[ byteInTreatment ] = 0x80; // =0b10000000
+    byteInTreatment++;
 
-    out = ( uint8_t * ) realloc( out , ( byteInTreatment + zerosToAdd - 1 ) * sizeof( uint8_t ) );
+    zerosToAdd = ( ( 448 - ( byteInTreatment * 8 ) ) % 512 ) / 8;
+
+    out = ( uint8_t * ) realloc( out , ( byteInTreatment + zerosToAdd ) * sizeof( uint8_t ) );
 
     for ( i = 0 ; i < zerosToAdd ; i++ )
     {
         out[ byteInTreatment ] = 0;
         byteInTreatment++;
     }
-    displayArray(byteInTreatment, out);
+
     for ( i = 0 ; i < 8 ; i++ )
     {
         out[ byteInTreatment ] = messageLength << ( 8 * ( 7 - i ) );
@@ -91,6 +93,7 @@ void preprocessing ( char * message , uint64_t * size , uint8_t * out )
     }
 
     *size = byteInTreatment;
+    return out;
 }
 
 void divideInBlocks (uint8_t * message , uint64_t size , uint32_t ** messageDivided)
@@ -127,14 +130,15 @@ void hashSHA1 ( char * message )
     uint64_t size = strlen ( message );
     uint8_t * test = ( uint8_t * ) calloc(  size , sizeof( uint8_t ) );;
 
-    printf("\nPreprocessing :\n");
-    preprocessing( message , &size , test );
+    printf("\nPreprocessing\n");
+    test = preprocessing( message , &size , test );
+    printf("Back to hashSHA1\n");
     displayArray(size, test);
 
-    uint64_t numberOfBlocks = size >> 6;//Divide by 64
-    uint32_t ** divided = (uint32_t**) calloc( numberOfBlocks, sizeof(uint8_t*) );
-//
-    divideInBlocks( test , size , divided );
+//    uint64_t numberOfBlocks = size >> 6;//Divide by 64
+//    uint32_t ** divided = (uint32_t**) calloc( numberOfBlocks, sizeof(uint8_t*) );
+////
+//    divideInBlocks( test , size , divided );
 
 //    uint32_t h0 = 0x67452301;
 //    uint32_t h1 = 0xEFCDAB89;
