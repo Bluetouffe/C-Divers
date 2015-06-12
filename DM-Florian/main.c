@@ -77,16 +77,15 @@ uint8_t * preprocessing ( char * message , uint64_t * size)
     //Add 1 at the string's end
 
     out[ byteInTreatment ] = 0x80; // =0b10000000
-    byteInTreatment++;
 
-    zerosToAdd = ( ( 448 - ( byteInTreatment * 8 ) ) % 512 ) / 8;
-    printf("Zeros to add : %d\n", zerosToAdd);
+    zerosToAdd = ( ( 448 - ( (byteInTreatment) * 8 ) ) % 512 ) / 8;
+
     out = ( uint8_t * ) realloc( out , ( byteInTreatment + zerosToAdd ) * sizeof( uint8_t ) );
 
     for ( i = 0 ; i < zerosToAdd ; i++ )
     {
-        out[ byteInTreatment ] = 0;
         byteInTreatment++;
+        out[ byteInTreatment ] = 0;
     }
 
     for ( i = 0 ; i < 8 ; i++ )
@@ -99,51 +98,16 @@ uint8_t * preprocessing ( char * message , uint64_t * size)
     return out;
 }
 
-uint64_t ** divideInBlocks (uint8_t * message , uint64_t size)
-{
-    uint64_t numberOfBlocks = size >> 6;
-
-    uint64_t ** divided = (uint64_t**) malloc( numberOfBlocks * sizeof(uint64_t*) );
-	uint64_t i = 0;
-
-	for (i = 0 ; i < numberOfBlocks ; i++ )
-	{
-		divided[ i ] = ( uint64_t* ) malloc( 8 * sizeof( uint32_t ) );
-	}
-
-    printf("Entering divideInBlocks\n");
-
-    uint8_t j = 0;
-    uint8_t k = 0;
-    uint8_t ind = 0;
-    uint8_t dec = 0;
-
-    for ( i = 0 ; i < numberOfBlocks ; i++ )
-    {
-        for ( j = 0 ; j < 16 ; j++ )
-        {
-            divided[i][j] = 0;
-            for ( k = 0 ; k < 4 ; k++ )
-            {
-                ind = ( j * 4 ) + k;
-                dec = 8 * ( 3 - k );
-                divided[i][j] =  divided[i][j] | ( ( (uint32_t) message[ind] ) << dec );
-            }
-        }
-    }
-    return divided;
-}
-
 void hashSHA1 ( char * message )
 {
-	uint64_t i = 0;
-    uint8_t j = 0;
+	unsigned long int i = 0;
+    short int j = 0;
     uint8_t k = 0;
-    uint8_t ind = 0;
+    uint64_t ind = 0;
     uint8_t dec = 0;
 
     uint64_t size = strlen ( message );
-    printf("Size : %d\n", size);
+    printf("Size : %X\n", size);
     uint8_t * test = ( uint8_t * ) calloc(  size , sizeof( uint8_t ) );
 
     uint64_t zerosToAdd = ( ( 448 - ( size * 8 ) ) % 512 ) / 8;
@@ -151,6 +115,7 @@ void hashSHA1 ( char * message )
     printf("Size : %d\n", size);
 
     uint64_t numberOfBlocks = size >> 6;//Divide by 64
+
     uint64_t ** divided = (uint64_t**) malloc( numberOfBlocks * sizeof(uint64_t*) );
 
 	for (i = 0 ; i < numberOfBlocks ; i++ )
@@ -159,21 +124,25 @@ void hashSHA1 ( char * message )
 	}
 
     test = preprocessing( message , &size);
+    displayArray(size, test);
 
     for ( i = 0 ; i < numberOfBlocks ; i++ )
     {
         for ( j = 0 ; j < 16 ; j++ )
         {
+            i = i;
+            j = j;
             divided[i][j] = 0;
             for ( k = 0 ; k < 4 ; k++ )
             {
-                ind = ( j * 4 ) + k;
+                ind = (64*i) + ( j * 4 ) + k;
                 dec = 8 * ( 3 - k );
-                divided[i][j] |=  ( ( (uint32_t) test[ind] ) << dec );
+                divided[i][j] |=  (uint32_t) test[ind] << dec;
             }
-            printf("%X\n", divided[i][j]);
+            printf("%X\n",  divided[i][j]);
         }
     }
+
 //    uint32_t h0 = 0x67452301;
 //    uint32_t h1 = 0xEFCDAB89;
 //    uint32_t h2 = 0x98BADCFE;
@@ -185,11 +154,9 @@ void hashSHA1 ( char * message )
 
 int main()
 {
-    //char * message = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
-    char * message = "abcdefghijklmnopqrstuvwxyz";
+    char * message = "0123456789@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+//    char * message = "abcdefghijklmnopqrstuvwxyz";
     hashSHA1( message );
-
-    system( "pause" );
 
     return 0;
 }
