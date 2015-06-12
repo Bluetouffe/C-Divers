@@ -54,13 +54,16 @@ void displayArray ( uint64_t size, uint8_t * t_array )
 
     for ( i = 0 ; i < size ; i++ )
     {
-        printf("%d ", t_array[ i ]);
+        printf("%X ", t_array[ i ]);
     }
     printf("\n");
 }
 
 uint8_t * preprocessing ( char * message , uint64_t * size , uint8_t * out )
 {
+
+    printf("\nPreprocessing\n");
+
     uint16_t zerosToAdd = 0;
     uint16_t i = 0;
 
@@ -96,13 +99,11 @@ uint8_t * preprocessing ( char * message , uint64_t * size , uint8_t * out )
     return out;
 }
 
-void divideInBlocks (uint8_t * message , uint64_t size , uint32_t ** messageDivided)
+uint32_t ** divideInBlocks (uint8_t * message , uint64_t size , uint32_t ** messageDivided)
 {
     uint64_t numberOfBlocks = size >> 6;
 
-    printf("\nDivide\n");
-    displayArray(size, message);
-    printf("\n");
+    printf("Entering divideInBlocks\n");
 
     uint64_t i = 0;
     uint8_t j = 0;
@@ -114,39 +115,46 @@ void divideInBlocks (uint8_t * message , uint64_t size , uint32_t ** messageDivi
     {
         for ( j = 0 ; j < 16 ; j++ )
         {
+            messageDivided[i][j] = 0;
             for ( k = 0 ; k < 4 ; k++ )
             {
                 ind = ( j * 4 ) + k;
-//                printf("%d ", message[ind]);
-//                dec = 8 * ( 3 - k );
-//                messageDivided[i][j] &=  ( ( (uint32_t) message[ind] ) << dec );
+                dec = 8 * ( 3 - k );
+                messageDivided[i][j] =  messageDivided[i][j] | ( ( (uint32_t) message[ind] ) << dec );
             }
         }
     }
+    return messageDivided;
 }
 
 void hashSHA1 ( char * message )
 {
+    printf("Entering hashSHA1\n\n");
     uint64_t size = strlen ( message );
     uint8_t * test = ( uint8_t * ) calloc(  size , sizeof( uint8_t ) );;
 
-    printf("\nPreprocessing\n");
     test = preprocessing( message , &size , test );
-    printf("Back to hashSHA1\n");
-    displayArray(size, test);
 
-//    uint64_t numberOfBlocks = size >> 6;//Divide by 64
-//    uint32_t ** divided = (uint32_t**) calloc( numberOfBlocks, sizeof(uint8_t*) );
-////
-//    divideInBlocks( test , size , divided );
+    printf("Back to hashSHA1 after processing\n");
+
+    uint64_t numberOfBlocks = size >> 6;//Divide by 64
+    uint32_t ** divided = (uint32_t**) malloc( numberOfBlocks * sizeof(uint8_t*) );
+	uint64_t i = 0;
+
+	for (i = 0 ; i < numberOfBlocks ; i++ )
+	{
+		divided[ i ] = ( uint32_t* ) malloc( 16 * sizeof( uint8_t ) );
+	}
+
+    divided = divideInBlocks( test , size , divided );
+
+    printf("Back to hashSHA1 after divideInBlocks\n");
 
 //    uint32_t h0 = 0x67452301;
 //    uint32_t h1 = 0xEFCDAB89;
 //    uint32_t h2 = 0x98BADCFE;
 //    uint32_t h3 = 0x10325476;
 //    uint32_t h4 = 0xC3D2E1F0;
-    free( test );
-    //free( divided );
 }
 
 int main()
@@ -154,8 +162,8 @@ int main()
     char * message = "abcdefghijklmnopqrstuvwxyz";
 
     hashSHA1( message );
-
-    system( "pause" );
+    printf("Back to Main\n");
+//    system( "pause" );
 
     return 0;
 }
