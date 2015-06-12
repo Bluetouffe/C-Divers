@@ -4,26 +4,6 @@
 #include <string.h>
 #include <math.h>
 
-/*Pour chaque bloc l'algorithme calcule 80 tours (ou rondes, « rounds » en anglais) successifs
-et applique une série de transformations sur l'entrée. La première étape consiste à calculer
-80 valeurs sur 32 bits. Les 16 premières valeurs sont obtenues directement à partir du bloc
-« message » en entrée. Les 64 autres sont calculées successivement. Le SHA-1 les obtient grâce
-à une rotation (absente dans SHA-0) qui est appliquée sur le résultat d'un XOR, il utilise pour
-cela 4 mots obtenus dans les itérations précédentes. On définit ensuite cinq variables qui sont
-initialisées avec des constantes (spécifiées par le standard), le SHA-1 utilise encore 4 autres
-constantes dans ses calculs. Si un bloc de 512 bits a déjà été calculé auparavant, les variables
-sont initialisées avec les valeurs obtenues à la fin du calcul sur le bloc précédent.
-
-Il s'ensuit 80 tours qui alternent des rotations, des additions entre les variables et les
-constantes. Selon le numéro du tour, le SHA-1 utilise une des quatre fonctions booléennes.
-L'une de ces fonctions est appliquée sur 3 des 5 variables disponibles. Les variables sont mises
-à jour pour le tour suivant grâce à des permutations et une rotation. En résumé, le SHA-1 change
-sa méthode de calcul tous les 20 tours et utilise les sorties des tours précédents.
-
-À la fin des 80 tours, on additionne le résultat avec le vecteur initial. Lorsque tous les
-blocs ont été traités, les cinq variables concaténées (5 × 32 = 160 bits) représentent la signature.
-*/
-
 uint32_t const H0 = 0x67452301;
 uint32_t const H1 = 0xEFCDAB89;
 uint32_t const H2 = 0x98BADCFE;
@@ -35,13 +15,6 @@ uint32_t const K2 = 0x6ED9EBA1;
 uint32_t const K3 = 0x8F1BBCDC;
 uint32_t const K4 = 0xCA62C1D6;
 
-typedef struct hashValue{
-    uint32_t h0;
-    uint32_t h1;
-    uint32_t h2;
-    uint32_t h3;
-    uint32_t h4;
-}hashValue;
 
 void charArrayToInt ( char * s_array , uint8_t * i_array )
 {
@@ -159,23 +132,20 @@ void hashSHA1 ( char * message )
         }
     }
 
+    uint32_t h0 = H0;
+    uint32_t h1 = H1;
+    uint32_t h2 = H2;
+    uint32_t h3 = H3;
+    uint32_t h4 = H4;
 
-    hashValue hashValues;
-
-    hashValues.h0 = H0;
-    hashValues.h1 = H1;
-    hashValues.h2 = H2;
-    hashValues.h3 = H3;
-    hashValues.h4 = H4;
-
-    displayArray(size, test);
+    //displayArray(size, test);
 
     for ( i = 0 ; i < numberOfBlocks ; i++ )
     {
         //W initialization
         for ( j = 0 ; j < 80 ; j++ )
         {
-            if ( j < 16)
+            if ( j < 16 )
             {
                 W[j] = divided[i][j];
             }
@@ -183,39 +153,41 @@ void hashSHA1 ( char * message )
             {
                 bufferROTL = ( ( ( W[j-3] ^ W[j-8] ) ^ W[j-14] ) ^ W[j-16] );
                 W[j] = ( bufferROTL << 1 ) | ( bufferROTL >> ( 32 - 1 ) );
-                printf("W%d : %x\n", j , W[j]);
             }
         }
         //End W initialization
 
-        a = hashValues.h0;
-        b = hashValues.h1;
-        c = hashValues.h2;
-        d = hashValues.h3;
-        e = hashValues.h4;
-
+        a = h0;
+        b = h1;
+        c = h2;
+        d = h3;
+        e = h4;
 
         for ( j = 0 ; j < 80 ; j++ )
         {
-            if ( j < 20)
+            if ( j <= 19 )
             {
-                f = ( ( b & c ) | ( ~(b) & d ) );
+                f = ( ( b & c ) | ( (~b) & d ) );
                 kt = K1;
+                kt = 0x5A827999;
             }
-            if ( ( j > 19 ) && ( j < 40 ) )
+            if ( ( j >= 20 ) && ( j <= 39 ) )
             {
                 f = ( ( b ^ c ) ^ d );
                 kt = K2;
+                kt = 0x6ED9EBA1;
             }
-            if ( ( j > 39 ) && ( j < 60 ) )
+            if ( ( j >= 40 ) && ( j <= 59 ) )
             {
                 f = ( ( b & c ) | ( b & d ) ) | ( c & d );
                 kt = K3;
+                kt = 0x8F1BBCDC;
             }
-            else
+            if ( ( j >= 60 ) && ( j <= 79 ) )
             {
-                f = ( ( b ^ c ) ^ d );
+                f = b ^ ( c ^ d );
                 kt = K4;
+                kt = 0xCA62C1D6;
             }
 
             bufferROTL = ( a << 5 ) | ( a >> (32 - 5) );
@@ -228,16 +200,14 @@ void hashSHA1 ( char * message )
             c = bufferROTL;
             b = a;
             a = bufferCondensate;
-
-            hashValues.h0 += a;
-            hashValues.h1 += b;
-            hashValues.h2 += c;
-            hashValues.h3 += d;
-            hashValues.h4 += e;
         }
+        h0 += a;
+        h1 += b;
+        h2 += c;
+        h3 += d;
+        h4 += e;
     }
-
-    printf("Resulting hash is :\n%X\n%X\n%X\n%X\n%X\n\n", hashValues.h0 , hashValues.h1 , hashValues.h2 , hashValues.h3 , hashValues.h4 );
+    printf("Resulting hash is :%X %X %X %X %X\n", h0 , h1 , h2 , h3 , h4 );
 
     free(test);
     free(divided);
@@ -246,6 +216,8 @@ void hashSHA1 ( char * message )
 int main()
 {
     char * message = "";
+//    char * message = "The quick brown fox jumps over the lazy dog";
+//    char * message = "The quick brown fox jumps over the lazy cog";
 //    char * message = "abcdefghijklmnopqrstuvwxyz";
     hashSHA1( message );
 
