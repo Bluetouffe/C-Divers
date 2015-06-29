@@ -211,8 +211,6 @@ void hashSHA1 ( char * message )
         printf("\nResulting hash is : %08X %08X %08X %08X %08X\n", h0 , h1 , h2 , h3 , h4 );
     }
 
-
-o
     free(test);
     free(divided);
 }
