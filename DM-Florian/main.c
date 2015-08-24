@@ -91,7 +91,7 @@ void hashSHA1 ( char * message )
     uint32_t bufferROTL = 0;
     uint32_t bufferCondensate = 0;
 
-	uint64_t i = 0;
+    uint64_t i = 0;
     uint64_t ind = 0;
     uint64_t size = 0;
     uint64_t zerosToAdd = 0;
